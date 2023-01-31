@@ -1,0 +1,197 @@
+using System;
+
+public class Matrices
+{
+    public float[,] Matrix;
+    public int Rows;
+    public int Columns;
+
+
+    #region initializers
+    public Matrices(int rows, int columns, float randomizeLowerValue, float randomizeUpperValue)
+    {
+        this.Rows = rows;
+        this.Columns = columns;
+        this.Matrix = new float[Rows, Columns];
+
+        for (int r = 0; r < Matrix.GetLength(0); r++)
+        {
+            for (int c = 0; c < Matrix.GetLength(1); c++)
+            {
+                Matrix[r, c] = UnityEngine.Random.Range(randomizeLowerValue, randomizeUpperValue);
+            }
+        }
+    }
+    public Matrices(float[,] matrix)
+    {
+        this.Rows = matrix.GetLength(0);
+        this.Columns = matrix.GetLength(1);
+        this.Matrix = matrix;
+    }
+    public Matrices(float[] matrix)
+    {
+        this.Rows = matrix.Length;
+        this.Columns = 1;
+        this.Matrix = new float[matrix.Length, 1];
+        for (int i = 0; i < matrix.Length; i++)
+        {
+            this.Matrix[i, 0] = matrix[i];
+        }
+    }
+    public Matrices(int rows, int columns)
+    {
+        this.Rows = rows;
+        this.Columns = columns;
+        this.Matrix = new float[Rows, Columns];
+    }
+
+    #endregion 
+
+    public void Add(float value)
+    {
+        for (int row = 0; row < this.Rows; row++)
+        {
+            for (int col = 0; col < this.Columns; col++)
+            {
+                Matrix[row, col] = Matrix[row, col] + value;
+            }
+        }
+    }
+
+    public Matrices Add(Matrices b, bool subtract = false)
+    {
+        if(b.Rows != this.Rows || b.Columns != this.Columns)
+        {
+            Console.WriteLine("Matricies need to be of same size, A=" + Rows + "X" + Columns + " B=" + b.Rows + "X" + b.Columns);
+            return null;
+        }
+
+        float[,] result = new float[this.Rows, this.Columns];
+        for (int r = 0; r < this.Rows; r++)
+        {
+            for (int c = 0; c < this.Columns; c++)
+            {
+                if (subtract)
+                {
+                    result[r, c] = this.Matrix[r, c] - b.Matrix[r, c];
+                } else {
+                    result[r, c] = this.Matrix[r, c] + b.Matrix[r, c];
+                }
+            }
+        }
+
+        return new Matrices(result);
+    }
+
+    public void ScalarMultiply(float value)
+    {
+        for (int row = 0; row < this.Rows; row++)
+        {
+            for (int col = 0; col < this.Columns; col++)
+            {
+                Matrix[row, col] = Matrix[row, col] * value;
+            }
+        }
+    }
+    public Matrices Multiply(Matrices b)
+    {
+        if(b.Rows != this.Columns)
+        {
+            Console.WriteLine("Rows not equal to Columns, A cols=" + this.Columns + " B rows=" + b.Rows);
+            return null;
+        }
+
+        float[,] results = new float[this.Rows, b.Columns];
+
+        for (int bcol = 0; bcol < b.Columns; bcol++)
+        {
+            for (int arow = 0; arow < this.Rows; arow++)
+            {
+                float value = 0;
+                for (int acol = 0; acol < this.Columns; acol++)
+                {
+                    value = value + this.Matrix[arow, acol] * b.Matrix[acol, bcol];
+                }
+                results[arow, bcol] = value;
+            }
+        }
+
+        return new Matrices(results);
+    }
+    public Matrices HadamardProduct(Matrices b)
+    {
+        if (b.Rows != this.Rows || b.Columns != this.Columns)
+        {
+            Console.WriteLine("Rows not equal to Columns, A cols=" + this.Columns + " B rows=" + b.Rows);
+            return null;
+        }
+
+        float[,] results = new float[this.Rows, b.Columns];
+
+        for (int r = 0; r < b.Rows; r++)
+        {
+            for (int c = 0; c < b.Columns; c++)
+            {
+                results[r, c] = Matrix[r, c] * b.Matrix[r, c];
+            }
+        }
+
+        return new Matrices(results);
+    }
+
+    public Matrices Transpose()
+    {
+        float[,] result = new float[this.Columns, this.Rows];
+
+        for (int r = 0; r < this.Rows; r++)
+        {
+            for (int c = 0; c < this.Columns; c++)
+            {
+                result[c, r] = Matrix[r, c];
+            }
+        }
+
+        return new Matrices(result);
+    }
+
+    public Matrices Map(Func<float,float> func)
+    {
+        float[,] result = new float[this.Rows, this.Columns];
+        for (int row = 0; row < this.Rows; row++)
+        {
+            for (int col = 0; col < this.Columns; col++)
+            {
+                result[row, col] = func(Matrix[row, col]);
+            }
+        }
+
+        return new Matrices(result);
+    }
+
+    public override string ToString()
+    {
+        string log = "";
+        for (int r = 0; r < this.Rows; r++)
+        {
+            for (int c = 0; c < this.Columns; c++)
+            {
+                if (c > 0)
+                {
+                    log = log + ", " + Round(this.Matrix[r, c], 2);
+                }
+                else
+                {
+                    log = log + Round(this.Matrix[r, c], 2);
+                }
+            }
+            log = log + "\n";
+        }
+        return log;
+    }
+
+    private float Round(float value, int digits)
+    {
+        double mult = Math.Pow(10.0f, (float)digits);
+        return (float)(Math.Round(value * mult) / mult);
+    }
+}
